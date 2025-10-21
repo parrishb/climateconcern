@@ -25,6 +25,7 @@ library(sf)
 library(fixest)
 library(grid) ## for function "unit" in maps
 library(ggspatial) ## for north arrow function in maps
+library(scico)
 library(tidyverse)
 # source("globalmrp_functions.R")
 
@@ -80,12 +81,12 @@ length(unique(d$mergekey[grepl(".nat",d$mergekey)==FALSE])) ## 2168
 
 ## number of countries where concern increased 
 # increase in global climate concern 
-est.nat%<>%filter(year%in%c("2010-11","2022-23"))
-est.reg%<>%filter(year%in%c("2010-11","2022-23"))
+est.nat%<>%filter(year%in%c("2012-13","2022-23")) ## CHANGE THESE TO MATCH MAPS
+est.reg%<>%filter(year%in%c("2012-13","2022-23"))
 est.nat%>%
   select(iso_3166,mean.scl,year)%>%
   pivot_wider(names_from=year,values_from=mean.scl)%>%
-  mutate(delta=`2022-23`-`2010-11`,
+  mutate(delta=`2022-23`-`2012-13`,
          # increase=ifelse(delta>=0,1,0))%>%
          change=case_when(delta==0~"stable",
                             delta>0~"increase",
@@ -97,7 +98,7 @@ est.nat%>%
 summ<-est.nat%>%
   select(NAME_0_gadm,mean.scl,year)%>%
   pivot_wider(names_from=year,values_from=mean.scl)%>%
-  mutate(delta=`2022-23`-`2010-11`,
+  mutate(delta=`2022-23`-`2012-13`,
          increase=factor(ifelse(delta>0,1,0)))
 
 
@@ -114,9 +115,9 @@ change<-rbind(summtop,summbottom)%>%
   arrange(NAME_0_gadm)
 changefig<-change%>%
   ggplot()+
-  geom_segment(aes(x=`2010-11`,y=NAME_0_gadm,xend=`2022-23`,yend=NAME_0_gadm,color=increase),
+  geom_segment(aes(x=`2012-13`,y=NAME_0_gadm,xend=`2022-23`,yend=NAME_0_gadm,color=increase),
                             arrow=arrow(length=unit(0.2,"cm")))+
-  geom_point(aes(x=`2010-11`,y=NAME_0_gadm,color=increase))+
+  geom_point(aes(x=`2012-13`,y=NAME_0_gadm,color=increase))+
   scale_color_manual(values=rev(mypal))+
   theme_bw()+
   labs(x="Climate concern",y="")+
@@ -124,7 +125,7 @@ changefig<-change%>%
 
 quartz(12,12)
 changefig
-ggsave(paste0(figfolder,"countrychanges_",modelname,".pdf"),width=3.5,height=6.5,changefig)
+ggsave(paste0(figfolder,"countrychanges_2012-22_",modelname,".pdf"),width=3.5,height=6.5,changefig)
 
 # maps #### 
 ## load country-level polygons
@@ -178,7 +179,7 @@ rm(regionkey)
 countryest<-countries%>%filter(!is.na(mean.std))
 ## save this file 
 countrynoest1<-countries%>%filter(is.na(mean.std))%>%
-  mutate(year="2010-11")
+  mutate(year="2012-13") ## changed this from 2010-11 to match our validation 
 countrynoest2<-countries%>%filter(is.na(mean.std))%>%
   mutate(year="2022-23")
 countrynoest<-rbind(countrynoest1,countrynoest2)
@@ -197,12 +198,22 @@ countries_proj1<-st_transform(countries, "+proj=moll")
 countrychange%<>%filter(!is.na(delta))
 countrydelta_proj<-st_transform(countrychange,"+proj=moll")
 
+rdblu_colors <- brewer.pal(11, "RdBu")
+
+# Drop the middle (white-ish) tones and interpolate smoothly
+custom_redblue <- colorRampPalette(rdblu_colors[c(11:8, 4:1)])(256)
+
 worldplot<-countrynoest_proj%>%
   ggplot()+
   theme_bw()+
-  geom_sf(aes(geometry=geom),fill="lightgray",lwd=.1,color="darkgray")+
-  geom_sf(data=countryest_proj,aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+
-  scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
+  geom_sf(aes(geometry=geom),fill="lightgray",lwd=.1,color="darkgray")+ ## original
+  # geom_sf(aes(geometry=geom),fill="white",lwd=.1,color="darkgray")+ ## with white fill, for use with continuous color scale
+  geom_sf(data=countryest_proj,aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+ ## continuous variable
+  scale_fill_scico(palette = "roma", direction = -1)+
+  # scale_fill_gradientn(colours = custom_redblue,guide = guide_colorbar(reverse = TRUE)) +
+  # scale_fill_distiller(palette = "RdBu", direction = -1,guide = guide_colorbar(reverse = TRUE))+
+  # geom_sf(data=countryest_proj,aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+ ##  binned variable 
+  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
   labs(fill="Climate\nconcern")+
   theme_classic()+
   theme(axis.text=element_blank(),
@@ -217,8 +228,10 @@ worldplot<-countrynoest_proj%>%
   facet_wrap(~year,nrow=2,ncol=1)
 
 worldplot
-ggsave(file=paste0(figfolder,"map_projected_paired_",modelname,"_",datafilter,".pdf"),height=6.5,width=6.5,
+ggsave(file=paste0(figfolder,"map_projected_paired_continuous_",modelname,"_",datafilter,".pdf"),height=6.5,width=6.5,
        worldplot)
+# ggsave(file=paste0(figfolder,"map_projected_paired_",modelname,"_",datafilter,".pdf"),height=6.5,width=6.5,
+#        worldplot)
 
 ## fig. S9: Deltas
 worldplot_delta<-countrynoest_proj%>%

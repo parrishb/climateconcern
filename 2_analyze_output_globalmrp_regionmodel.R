@@ -533,84 +533,84 @@ if(exists("datafilter")){
                include.rownames=FALSE,file=paste0(figfolder,"timeseries",datafilter,"_",modelname,".tex"))
 }
 
-### predictive ability of our climate concern estimates on european ideology (DELETE IF DON'T USE) ####
-## Dunlap and Mccright have a 2015 paper showing stronger correlation in western vs. post-communist countries. maybe we show that? 
-ideo<-haven::read_dta("~/Documents/GitHub/globalmrp/globalmrp_hpc/inputs/europe_ideology.dta")%>%
-  mutate(biennium=as_factor(biennium))%>%
-  mutate(year=substr(as.character(biennium),6,nchar(as.character(biennium)))) ## use 2nd year of biennium here 
-
-country.poststrat2<-country.poststrat%>%
-  mutate(year2 = str_c(str_sub(year2, 1, 5),"20",str_sub(year2, 6, str_length(year2))))%>%
-  mutate(year=substr(year2,1,4)) ## use 1st year of biennium here. 
-## So we're merging, eg, 2003-2004 ideology into 2004-2005 climate concern 
-
-country.poststrat2%<>%
-  left_join(ideo%>%select(year,country,econ_abs_post_mean,soc_post_mean),
-            by=c("NAME_0_gadm"="country","year"))
-nrow(country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),]) ## 200 values here
-unique(country.poststrat2$NAME_0_gadm[!is.na(country.poststrat2$econ_abs_post_mean)])
-
-
-## find correlation in each year
-cordata_europe<-country.poststrat2%>%
-  filter(!is.na(econ_abs_post_mean))%>%
-  group_by(year)%>% ## year2? 220813
-  summarize(ideocorr=round(cor(mean,econ_abs_post_mean,use="complete.obs"),2))%>%
-  arrange(desc(ideocorr))
-country.poststrat2%<>%
-  left_join(cordata_europe,by="year") 
-
-## cross-sectional correlations: 
-ideocorplot<-country.poststrat2%>%
-  filter(!is.na(econ_abs_post_mean))%>%
-  ggplot(aes(x=mean,y=econ_abs_post_mean,label=NAME_0_gadm))+
-  geom_text(size=2)+
-  geom_text(data=country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),],aes(x=1,y=4,label=ideocorr),color="blue")+
-  facet_wrap(~year,nrow=6,ncol=4)+ 
-  labs(x="Global climate concern",y="Economic conservatism\n(Caughey, O'Grady, & Warshaw)")+
-  theme_bw()+
-  theme(strip.text.x=element_text(size=8),legend.position="bottom")
-ideocorplot#
-if(exists("datafilter")){
-  ggsave(file=paste0(figfolder,"validation_correlations_europeideology-",modelname,"_",datafilter,"_",".pdf"),
-         width=6.5,height=3.5,ideocorplot)
-}else{
-  ggsave(file=paste0(figfolder,"validation_correlations_europeideology-",modelname,"_",".pdf"),
-         width=6.5,height=3.5,ideocorplot)
-}
-
-## create indicator for post-communism
-europe<-unique(country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),"NAME_0_gadm"])
-print(europe,n=Inf)
-country.poststrat2%<>%
-  mutate(postcom=ifelse(NAME_0_gadm%in%c("Bulgaria","Czech Republic","Estonia","Hungary","Lithuania","Latvia","Slovenia","Slovakia")==TRUE,"postcom","western"))
-
-cordata_europe2<-country.poststrat2%>%
-  filter(!is.na(econ_abs_post_mean))%>%
-  group_by(year,postcom)%>% ## year2? 220813
-  summarize(ideocorr2=round(cor(mean,econ_abs_post_mean,use="complete.obs"),2))%>%
-  arrange(desc(ideocorr2))
-country.poststrat2%<>%
-  left_join(cordata_europe2,by=c("year","postcom"))
-
-ideocorplot2<-country.poststrat2%>%
-  filter(!is.na(econ_abs_post_mean))%>%
-  ggplot(aes(x=mean,y=econ_abs_post_mean,label=NAME_0_gadm))+
-  geom_text(size=2)+
-  geom_text(data=country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),],aes(x=1,y=4,label=ideocorr2),color="blue")+
-  facet_wrap(~year~postcom,nrow=6,ncol=4)+ 
-  labs(x="Global climate concern",y="Economic conservatism\n(Caughey, O'Grady, & Warshaw)")+
-  theme_bw()+
-  theme(strip.text.x=element_text(size=8),legend.position="bottom")
-ideocorplot2 ## we see a mostly stronger relationship in western countries, but not in every year (and 2008/ 2010 are notable and problematic exceptions)
-
-if(exists("datafilter")){
-  ggsave(file=paste0(figfolder,"validation_correlations_europeideology_postcom-",modelname,"_",datafilter,"_",".pdf"),
-         width=6.5,height=9,ideocorplot2)
-}else{
-  ggsave(file=paste0(figfolder,"validation_correlations_europeideology_postcom-",modelname,"_",".pdf"),
-         width=6.5,height=9,ideocorplot2)
-}
+# ### predictive ability of our climate concern estimates on european ideology (DELETE IF DON'T USE) ####
+# ## Dunlap and Mccright have a 2015 paper showing stronger correlation in western vs. post-communist countries. maybe we show that? 
+# ideo<-haven::read_dta("~/Documents/GitHub/globalmrp/globalmrp_hpc/inputs/europe_ideology.dta")%>%
+#   mutate(biennium=as_factor(biennium))%>%
+#   mutate(year=substr(as.character(biennium),6,nchar(as.character(biennium)))) ## use 2nd year of biennium here 
+# 
+# country.poststrat2<-country.poststrat%>%
+#   mutate(year2 = str_c(str_sub(year2, 1, 5),"20",str_sub(year2, 6, str_length(year2))))%>%
+#   mutate(year=substr(year2,1,4)) ## use 1st year of biennium here. 
+# ## So we're merging, eg, 2003-2004 ideology into 2004-2005 climate concern 
+# 
+# country.poststrat2%<>%
+#   left_join(ideo%>%select(year,country,econ_abs_post_mean,soc_post_mean),
+#             by=c("NAME_0_gadm"="country","year"))
+# nrow(country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),]) ## 200 values here
+# unique(country.poststrat2$NAME_0_gadm[!is.na(country.poststrat2$econ_abs_post_mean)])
+# 
+# 
+# ## find correlation in each year
+# cordata_europe<-country.poststrat2%>%
+#   filter(!is.na(econ_abs_post_mean))%>%
+#   group_by(year)%>% ## year2? 220813
+#   summarize(ideocorr=round(cor(mean,econ_abs_post_mean,use="complete.obs"),2))%>%
+#   arrange(desc(ideocorr))
+# country.poststrat2%<>%
+#   left_join(cordata_europe,by="year") 
+# 
+# ## cross-sectional correlations: 
+# ideocorplot<-country.poststrat2%>%
+#   filter(!is.na(econ_abs_post_mean))%>%
+#   ggplot(aes(x=mean,y=econ_abs_post_mean,label=NAME_0_gadm))+
+#   geom_text(size=2)+
+#   geom_text(data=country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),],aes(x=1,y=4,label=ideocorr),color="blue")+
+#   facet_wrap(~year,nrow=6,ncol=4)+ 
+#   labs(x="Global climate concern",y="Economic conservatism\n(Caughey, O'Grady, & Warshaw)")+
+#   theme_bw()+
+#   theme(strip.text.x=element_text(size=8),legend.position="bottom")
+# ideocorplot#
+# if(exists("datafilter")){
+#   ggsave(file=paste0(figfolder,"validation_correlations_europeideology-",modelname,"_",datafilter,"_",".pdf"),
+#          width=6.5,height=3.5,ideocorplot)
+# }else{
+#   ggsave(file=paste0(figfolder,"validation_correlations_europeideology-",modelname,"_",".pdf"),
+#          width=6.5,height=3.5,ideocorplot)
+# }
+# 
+# ## create indicator for post-communism
+# europe<-unique(country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),"NAME_0_gadm"])
+# print(europe,n=Inf)
+# country.poststrat2%<>%
+#   mutate(postcom=ifelse(NAME_0_gadm%in%c("Bulgaria","Czech Republic","Estonia","Hungary","Lithuania","Latvia","Slovenia","Slovakia")==TRUE,"postcom","western"))
+# 
+# cordata_europe2<-country.poststrat2%>%
+#   filter(!is.na(econ_abs_post_mean))%>%
+#   group_by(year,postcom)%>% ## year2? 220813
+#   summarize(ideocorr2=round(cor(mean,econ_abs_post_mean,use="complete.obs"),2))%>%
+#   arrange(desc(ideocorr2))
+# country.poststrat2%<>%
+#   left_join(cordata_europe2,by=c("year","postcom"))
+# 
+# ideocorplot2<-country.poststrat2%>%
+#   filter(!is.na(econ_abs_post_mean))%>%
+#   ggplot(aes(x=mean,y=econ_abs_post_mean,label=NAME_0_gadm))+
+#   geom_text(size=2)+
+#   geom_text(data=country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),],aes(x=1,y=4,label=ideocorr2),color="blue")+
+#   facet_wrap(~year~postcom,nrow=6,ncol=4)+ 
+#   labs(x="Global climate concern",y="Economic conservatism\n(Caughey, O'Grady, & Warshaw)")+
+#   theme_bw()+
+#   theme(strip.text.x=element_text(size=8),legend.position="bottom")
+# ideocorplot2 ## we see a mostly stronger relationship in western countries, but not in every year (and 2008/ 2010 are notable and problematic exceptions)
+# 
+# if(exists("datafilter")){
+#   ggsave(file=paste0(figfolder,"validation_correlations_europeideology_postcom-",modelname,"_",datafilter,"_",".pdf"),
+#          width=6.5,height=9,ideocorplot2)
+# }else{
+#   ggsave(file=paste0(figfolder,"validation_correlations_europeideology_postcom-",modelname,"_",".pdf"),
+#          width=6.5,height=9,ideocorplot2)
+# }
 
 ### validation of 2 time point comparison. use pew worry questions. delete if don't use. #### 
 q.vals<-c("worry_serious_pew","worry_climatethreat_pew")
@@ -627,7 +627,7 @@ d.samples.val<-survey.data%>%
   summarise_at(q.vals,list(n=~sum(!is.na(.))))%>%
   ungroup()
 d.samples.val%<>%
-  pivot_longer(cols=3:ncol(d.samples),names_to="question",values_to="size")%>%
+  pivot_longer(cols=3:ncol(d.samples.val),names_to="question",values_to="size")%>%
   mutate(question=substr(question,1,nchar(question)-2))
 
 ## combine into single dataset and get proportion of yes responses
@@ -642,8 +642,46 @@ d.val<-d.val%>%
   left_join(country.est,by=c("iso_3166","year2")) ## year2? 220813
 table(d.val$question,d.val$year2) ### worry_climatethreat_pew is a good candidate here...asked in 2012/13-2022/23
 
-d.val%<>%filter(question=="worry_climatethreat_pew",year2%in%c("2012-13","2022-23")==TRUE) ## we lose a lot here because the worry question wasn't asked in all places in both years. 
-## measured changes over time, in period 1 standard deviation units 
+# ## see what this looks like with worry_serious_pew-- delete if don't use
+# d.val%<>%filter(question=="worry_serious_pew",year2%in%c("2006-07","2014-15")==TRUE)
+# delta.sd<-d.val%>%
+#   filter(year2=="2006-07")%>%
+#   group_by(year2)%>%
+#   summarise_at(c("yes","mean"),list(sd=~sd((.),na.rm=TRUE)))%>%
+#   select(-year2)%>%
+#   # rename("yes"="yes_sd","mean"="mean_sd")%>%
+#   pivot_longer(cols=everything(),names_to="var",values_to="sdev")
+# d.val%<>%pivot_wider(names_from=year2,values_from=c(yes,mean))%>%
+#   mutate(meandiff=`mean_2014-15`-`mean_2006-07`,
+#          yesdiff=`yes_2014-15`-`yes_2006-07`)%>%
+#   mutate(meandiff.std=meandiff/delta.sd$sdev[delta.sd$var=="mean_sd"],
+#          yesdiff.std=yesdiff/delta.sd$sdev[delta.sd$var=="yes_sd"])
+# quartz(12,12)
+# pewplot<-
+#   ggplot(d.val,aes(x=meandiff.std,y=yesdiff.std,label=iso_3166))+
+#   geom_text()+
+#   scale_y_continuous(limits=c(-1,2))+
+#   scale_x_continuous(limits=c(-1,2))+
+#   geom_abline(slope=1,intercept=0)+
+#   geom_hline(yintercept=0,lty="dotted",color="red")+
+#   geom_vline(xintercept=0,lty="dotted",color="red")+
+#   theme_bw()+
+#   labs(x="Change in climate concern\n(2006-07 standard deviations)",
+#        y="Change in country-aggregated survey responses\n(2006-07 standard deviations)",
+#        title="Change in worry_climatethreat_pew and climate concern estimates,\n2006-07 --2014-15")
+# pewplot
+# ggsave(filename=paste0(figfolder,"validation_2006-2014.pdf"),width=6.5,height=6.5,pewplot)
+
+
+## now see what it looks like with worry_climatethreat_pew
+d.val<-full_join(d.yesresponses.val,d.samples.val,by=c("iso_3166","question","year2"))%>%
+  filter(size!=0)%>%
+  select(-size)
+
+country.est<-country.poststrat%>%select(iso_3166,year2,mean)## year2? 220813
+d.val<-d.val%>%
+  left_join(country.est,by=c("iso_3166","year2"))
+d.val%<>%filter(question=="worry_climatethreat_pew",year2%in%c("2012-13","2022-23")==TRUE) ## we lose a lot here because the worry question wasn't asked in all places in both years.
 delta.sd<-d.val%>%
   filter(year2=="2012-13")%>%
   group_by(year2)%>%
@@ -664,13 +702,14 @@ pewplot<-
   scale_y_continuous(limits=c(-1,2))+
   scale_x_continuous(limits=c(-1,2))+
   geom_abline(slope=1,intercept=0)+
-  geom_hline(yintercept=0,lty="dotted",color="red")+
-  geom_vline(xintercept=0,lty="dotted",color="red")+
+  # geom_hline(yintercept=0,lty="dotted",color="red")+
+  # geom_vline(xintercept=0,lty="dotted",color="red")+
   theme_bw()+
   labs(x="Change in climate concern\n(2012-13 standard deviations)",
        y="Change in country-aggregated survey responses\n(2012-13 standard deviations)",
        title="Change in worry_climatethreat_pew and climate concern estimates,\n2012-13 -- 2022-23")
-ggsave(filename=paste0(figfolder,"validation_twotimeperiods.pdf"),width=6.5,height=6.5,pewplot)
+pewplot
+ggsave(filename=paste0(figfolder,"validation_2012-2022.pdf"),width=6.5,height=6.5,pewplot)
 
 
 
