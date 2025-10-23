@@ -765,13 +765,15 @@ ggsave(file=paste0(figfolder,"scatter_emissions_concern_europeregions_",modelnam
 
 
 
-# Fig. S3: dimensionality with country-year groups: only questions with 20+ countries #### 
+# Fig. S3: correlation matrix showing dimensionality with country-year groups: only questions with 20+ countries #### 
 ## average each question within group-biennia, 
 ## center these averages within year (to eliminate time effects), 
 ## and then average across biennia within groups.
 
 ## load survey data and collapse time periods (have to do this anew here b/c survey.data saved in data input only contains questions used...no action or awareness questions) #### 
 load(paste0("inputs/megapoll_globalmrp_ordinal_replication.Rda"))
+load(paste0("inputs/surveys_nonpublic.Rda")) 
+## merge these two together. 
 survey.data%<>%filter(as.numeric(year)>=2002)
 
 
@@ -831,9 +833,10 @@ for(i in 1:length(qlist)){
   country.yr.means[[i]]<-d
 }
 country.yr.means<-do.call(rbind,country.yr.means)
-country.yr.means%<>%bind_rows(country.yr.means.np)
+country.yr.means%<>%bind_rows(country.yr.means.np) ## merge with the non-public data. This is only 3 questions
+unique(country.yr.means.np$question)
 country.yr.means.wide<-pivot_wider(country.yr.means,id_cols=c(iso_3166),names_from="question",values_from="val")
-cormat.yr<-cor(country.yr.means.wide[,3:ncol(country.yr.means.wide)],use="pairwise.complete.obs")
+cormat.yr<-cor(country.yr.means.wide[,2:ncol(country.yr.means.wide)],use="pairwise.complete.obs")
 
 ## find average correlation for each variable 
 cormat.df<-data.frame(cormat.yr)
@@ -849,6 +852,92 @@ corrplot(cormat.yr,order="alphabet",
          tl.pos="lt",
          tl.cex=.5,number.cex=0.5)
 dev.off()
+
+# correlation matrix divided by global north vs. global south 
+## limit to questions with 30+ countries, merge in continent names so I can look at these correlations 
+## by Global North vs. Global South (very roughly approximated by Europe + North America vs. rest of world)
+qlist<-filter(n.qns,ctry.n>=30)
+qlist<-unique(qlist$question)
+country.yr.means%<>%filter(question%in%qlist==TRUE)
+country.yr.means.wide%<>%select(-all_of(qlist))
+continents<-est.nat%>%select(iso_3166,Continent_Name)%>%distinct()
+country.yr.means%<>%left_join(continents)%>%
+  mutate(europeus=ifelse(Continent_Name%in%c("Europe","North America")==TRUE,"yes","no"))
+country.yr.means.wide%<>%left_join(continents)
+country.yr.means.wide%<>%
+  mutate(europeus=ifelse(Continent_Name%in%c("Europe","North America")==TRUE,"yes","no"))
+avgcorlist<-list()
+for(i in 1:length(c("yes","no"))){
+  df<-country.yr.means.wide%>%
+    filter(europeus==c("yes","no")[i])%>%
+    select(-Continent_Name,-europeus)
+  ## find number of countries for which we have enough data to calculate a correlation --set minimum to 10
+  ns<-df%>%summarise(across(-iso_3166,~sum(!is.na(.x))))%>%
+    pivot_longer(cols=everything(),values_to="n",names_to="question")%>%
+    filter(n>10)
+  df%<>%select(iso_3166,all_of(ns$question))
+  cormat.yr<-cor(df[,2:ncol(df)],use="pairwise.complete.obs")
+  cormat.df<-data.frame(cormat.yr) 
+  ## remove full rows and columns of NA values 
+  nas<-apply(cormat.df,1,function(x) all(is.na(x)))
+  if(length(which(nas==TRUE))>0){
+  cormat.df<-cormat.df[-which(nas==TRUE),-which(nas==TRUE)] 
+  }
+  avgcor<-apply(cormat.df,MARGIN = 2,mean,na.rm=TRUE)
+  avgcor<-data.frame(var=names(cormat.df),cor=round(avgcor,2))
+  avgcornames<-avgcor%>%
+    mutate(cor=paste(var,cor,sep=": "))
+  if(length(which(nas==TRUE))>0){
+    cormat.yr<-cormat.yr[-which(nas==TRUE),-which(nas==TRUE)]
+  }
+  rownames(cormat.yr)<-avgcornames$cor
+  colnames(cormat.yr)<-avgcornames$cor
+  pdf(paste0(figfolder,"corplot_country_year_sub_","europeus=",c("yes","no")[i],".pdf"))
+  corrplot(cormat.yr,order="alphabet",
+           #order="FPC",## order by first principal component
+           tl.pos="lt",
+           tl.cex=.5,number.cex=0.5)
+  dev.off()
+  avgcorlist[[i]]<-avgcor
+  names(avgcorlist[[i]])[2]=paste0("cor=",c("yes","no")[i])
+  }
+avgcor=full_join(avgcorlist[[1]],avgcorlist[[2]],by="var")
+## merge with average values and stdev from the two regions 
+# country.yr.means%<>%
+#   group_by(europeus,question)%>%
+#   summarise(mean = mean(val,na.rm=TRUE),
+#                stdev = sd(val,na.rm=TRUE))
+# country.yr.means%<>%
+#   pivot_wider(names_from=europeus,values_from=c(mean,stdev),names_sep=":")
+# avgcor%<>%left_join(country.yr.means,by=c("var"="question"))
+# avgcor%<>%mutate(across(where(is.numeric),~round(.x,2)))
+
+## set limits 
+c(max(avgcor$`cor=yes`,na.rm=TRUE),max(avgcor$`cor=no`,na.rm=TRUE),min(avgcor$`cor=yes`,na.rm=TRUE),min(avgcor$`cor=no`,na.rm=TRUE))
+corplot_northsouth<-ggplot(avgcor,aes(x=`cor=yes`,y=`cor=no`,label=var))+
+  geom_text(size=2.5)+
+  scale_x_continuous(limits=c(0,1))+ ## ensure that these limits include maxes and mins above 
+  scale_y_continuous(limits=c(0,1))+
+  geom_abline(slope=1,intercept=0,lty="dashed")+
+  labs(x="Average pairwise correlation:\nEurope and North America",
+       y="Average pairwise correlation:\nAsia,Africa,Oceania,Eurasia")+
+  theme_bw()
+corplot_northsouth
+ggsave(filename=paste0(figfolder,"pairwisecorrelations_scatter.pdf"),width=6.5,height=3.5,corplot_northsouth)
+# ## merge in discrimination parameters to see if tight correlations here are correlated with strong discrimination parameters
+# avgcor%<>%left_join(discrimination2%>%select(question2,mean)%>%distinct(),by=c("var"="question2"))
+# avgcor%<>%rename(discrimination=mean)
+# ggplot(avgcor,aes(x=`cor=yes`,y=`cor=no`,label=var,color=discrimination))+
+#   geom_point()+
+#   scale_color_scico(palette="roma")+
+#   scale_x_continuous(limits=c(-.5,1))+
+#   scale_y_continuous(limits=c(-.5,1))+
+#   geom_abline(slope=1,intercept=0)
+# 
+# ggplot(avgcor,aes(x=`stdev:yes`,y=`stdev:no`,label=var))+
+#   geom_text(size=2)+
+#   scale_x_continuous(limits=c(0,1.5))+
+#   scale_y_continuous(limits=c(0,1.5))
 
 # dimensionality for surveys for which we have multiple questions ####
 sources<-c("worldbank_2010","mildenbergerdynata_2021")
