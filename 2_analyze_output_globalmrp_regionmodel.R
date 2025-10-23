@@ -69,6 +69,11 @@ surveydesc<-d%>%
   mutate(NAME_0_gadm=ifelse(iso_3166=="ST","Sao Tome and Principe",NAME_0_gadm))
 write_csv(surveydesc,file=paste0(figfolder,"country_data_summaries.csv"),col_names=FALSE)
 
+## find distribution of country-years, years, and questions in the data 
+glimpse(surveydesc)
+quantile(surveydesc$questions) ## 75th percentile is 16
+quantile(surveydesc$`question-years`) ## 75th percentile is 25.5 (26)
+
 qs_in_model<-unique(d$question) 
 length(unique(survey.data$source2)) ## 97 sources (this number will not be right in replication because of non-public sources)
 length(unique(d$iso_3166)) ## 166 countries
@@ -695,22 +700,24 @@ d.val%<>%pivot_wider(names_from=year2,values_from=c(yes,mean))%>%
          yesdiff=`yes_2022-23`-`yes_2012-13`)%>%
   mutate(meandiff.std=meandiff/delta.sd$sdev[delta.sd$var=="mean_sd"],
          yesdiff.std=yesdiff/delta.sd$sdev[delta.sd$var=="yes_sd"])
-                      
+valcor<-round(cor(d.val$meandiff.std,d.val$yesdiff.std,use="complete.obs"),2) ## 0.77 correlation
+
 pewplot<-
   ggplot(d.val,aes(x=meandiff.std,y=yesdiff.std,label=iso_3166))+
   geom_text()+
   scale_y_continuous(limits=c(-1,2))+
   scale_x_continuous(limits=c(-1,2))+
-  geom_abline(slope=1,intercept=0)+
+  geom_abline(slope=1,intercept=0,lty="dashed")+  
+  geom_text(aes(x=1.75,y=0,label=paste0("r = ",valcor)),color="blue")+
   # geom_hline(yintercept=0,lty="dotted",color="red")+
   # geom_vline(xintercept=0,lty="dotted",color="red")+
   theme_bw()+
   labs(x="Change in climate concern\n(2012-13 standard deviations)",
-       y="Change in country-aggregated survey responses\n(2012-13 standard deviations)",
-       title="Change in worry_climatethreat_pew and climate concern estimates,\n2012-13 -- 2022-23")
+       y="Change in country-aggregated survey responses\n(2012-13 standard deviations)"#,
+       # title="Change in worry_climatethreat_pew and climate concern estimates,\n2012-13 -- 2022-23"
+       )
 pewplot
 ggsave(filename=paste0(figfolder,"validation_2012-2022.pdf"),width=6.5,height=6.5,pewplot)
-
 
 
 

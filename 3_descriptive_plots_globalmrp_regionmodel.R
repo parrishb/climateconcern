@@ -108,7 +108,10 @@ summtop<-summ%>%
 summbottom<-summ%>%
   arrange(delta)%>%
   slice_head(n=10)
-mypal<-brewer.pal(10,"RdBu")[c(3,8)]
+# mypal<-brewer.pal(10,"RdBu")[c(3,8)]
+mypal <- scico(10, palette = "roma")[c(3, 8)]  
+
+
 change<-rbind(summtop,summbottom)%>%
   mutate(NAME_0_gadm=factor(NAME_0_gadm),
          NAME_0_gadm=fct_reorder(NAME_0_gadm,delta))%>%
@@ -198,11 +201,6 @@ countries_proj1<-st_transform(countries, "+proj=moll")
 countrychange%<>%filter(!is.na(delta))
 countrydelta_proj<-st_transform(countrychange,"+proj=moll")
 
-rdblu_colors <- brewer.pal(11, "RdBu")
-
-# Drop the middle (white-ish) tones and interpolate smoothly
-custom_redblue <- colorRampPalette(rdblu_colors[c(11:8, 4:1)])(256)
-
 worldplot<-countrynoest_proj%>%
   ggplot()+
   theme_bw()+
@@ -239,7 +237,8 @@ worldplot_delta<-countrynoest_proj%>%
   theme_bw()+
   geom_sf(aes(geometry=geom),fill="lightgray",lwd=.1,color="darkgray")+
   geom_sf(data=countrydelta_proj,aes(geometry=geom,fill=delta),lwd=.1,color="darkgray")+
-  scale_fill_distiller(palette="RdBu")+
+  # scale_fill_distiller(palette="RdBu")+
+  scale_fill_scico(palette = "roma", direction = -1)+
   # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
   labs(fill="Change in \nclimate\nconcern")+
   theme_classic()+
@@ -268,9 +267,10 @@ europlot<-europe2022%>%
   ggplot()+
   theme_bw()+
  # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
-  geom_sf(aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+
+  geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
   # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
   # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
@@ -299,9 +299,10 @@ eastasiaplot<-eastasia%>%
   ggplot()+
   theme_bw()+
   # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
-  geom_sf(aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+
+  geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
   # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
   # labs(fill="Climate concern\n(st.dev from global mean)")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
   labs(fill="Climate\nconcern")+
@@ -330,9 +331,10 @@ southasiaplot<-southasia%>%
   ggplot()+
   theme_bw()+
   # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
-  geom_sf(aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+
+  geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
   # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
   # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
@@ -367,9 +369,10 @@ africaplot<-africa%>%
   ggplot()+
   theme_bw()+
   # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
-  geom_sf(aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+
+  geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
   # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
+  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
   # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+ ## this line is now creating lines across the map. why? 
@@ -397,9 +400,10 @@ southamericaplot<-southamerica%>%
   ggplot()+
   theme_bw()+
   # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
-  geom_sf(aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+
+  geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
   # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
   # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
@@ -427,9 +431,10 @@ northamericaplot<-northamerica%>%
   ggplot()+
   theme_bw()+
   # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
-  geom_sf(aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+
+  geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
   # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
   # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
@@ -457,9 +462,10 @@ oceaniaplot<-oceania%>%
   ggplot()+
   theme_bw()+
   # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
-  geom_sf(aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+
+  geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
   # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
+  scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
   # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
