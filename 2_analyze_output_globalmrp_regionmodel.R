@@ -127,7 +127,42 @@ sort(unique(n.qns$source2))
 length(unique(n.qns$source2)) ## 77 sources these numbers will be wrong in replication code because of non-public data
 length(unique(n.qns$question)) ## 81 questions
 
-## filter to questions with more than 30 countries included
+## for reviewers memo, look at correlation with raw data from the Dynata survey
+dynata<-d.samples%>%
+  filter(source2=="mildenbergerdynata",
+         size!=0)
+dynata.yes<-survey.data%>%
+  select(all_of(unique(dynata$question)),year2,iso_3166,source2)%>%
+  filter(source2=="mildenbergerdynata")%>%
+  mutate_at(unique(dynata$question),as.numeric)%>%
+  mutate_at(unique(dynata$question),~ifelse(.<0,NA,.))%>%
+  group_by(iso_3166,year2)%>%
+  summarise_at(unique(dynata$question),list(~mean((.),na.rm=TRUE)))%>%
+  ungroup()%>%
+  pivot_longer(unique(dynata$question),names_to="question",values_to="avg.resp")
+d.dynata<-full_join(dynata.yes,dynata,by=c("iso_3166","question","year2"))
+
+## merge in estimates 
+d.dynata%<>%left_join(country.poststrat%>%select(mean,iso_3166,year2),by=c("iso_3166","year2")) %>%arrange(iso_3166,year2)
+d.dynata%<>%
+  group_by(question)%>%
+  mutate(prop.scl=scale(avg.resp)[,1], ## scale values within each question-year
+         corr=round(cor(prop.scl,mean,use="everything"),2))%>%
+  ungroup()
+## table of correlations with dynata data: 
+print.xtable(xtable(d.dynata%>%
+  select(question,corr)%>%
+  distinct()%>%
+    rename(correlation=corr)),include.rownames = FALSE)
+# ggplot(d.dynata,aes(x=prop.scl,y=mean,label=iso_3166))+
+#   geom_text()+
+#   geom_text(aes(label=corr,x=2,y=2),color="blue")+
+#   # geom_abline(intercept=0,slope=1,lty="dotted")+
+#   # scale_x_continuous(limits=c(0,3))+
+#   # scale_y_continuous(limits=c(0,3))+
+#   facet_wrap(~question)
+
+## For figure S5, filter to questions with more than 30 countries included
 qlist<-filter(n.qns,ctry.n>=30)%>%
   bind_rows(qlist.np)
 
@@ -136,7 +171,7 @@ d.samples%<>%
   group_by(question,iso_3166,year2,source2)%>%
   summarise(size=sum(size,na.rm=TRUE))%>%
   ungroup()
-
+unique(d.samples$source2)
 
 ## aggregate responses across sources by question-year
 d.yesresponses<-survey.data%>%

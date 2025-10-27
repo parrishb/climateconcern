@@ -874,7 +874,7 @@ for(i in 1:length(c("yes","no"))){
   ## find number of countries for which we have enough data to calculate a correlation --set minimum to 10
   ns<-df%>%summarise(across(-iso_3166,~sum(!is.na(.x))))%>%
     pivot_longer(cols=everything(),values_to="n",names_to="question")%>%
-    filter(n>10)
+    filter(n>15)
   df%<>%select(iso_3166,all_of(ns$question))
   cormat.yr<-cor(df[,2:ncol(df)],use="pairwise.complete.obs")
   cormat.df<-data.frame(cormat.yr) 
@@ -916,8 +916,9 @@ avgcor=full_join(avgcorlist[[1]],avgcorlist[[2]],by="var")
 c(max(avgcor$`cor=yes`,na.rm=TRUE),max(avgcor$`cor=no`,na.rm=TRUE),min(avgcor$`cor=yes`,na.rm=TRUE),min(avgcor$`cor=no`,na.rm=TRUE))
 corplot_northsouth<-ggplot(avgcor,aes(x=`cor=yes`,y=`cor=no`,label=var))+
   geom_text(size=2.5)+
-  scale_x_continuous(limits=c(0,1))+ ## ensure that these limits include maxes and mins above 
-  scale_y_continuous(limits=c(0,1))+
+  # geom_point()+
+  scale_x_continuous(limits=c(-0.5,1))+ ## ensure that these limits include maxes and mins above
+  scale_y_continuous(limits=c(-0.5,1))+
   geom_abline(slope=1,intercept=0,lty="dashed")+
   labs(x="Average pairwise correlation:\nEurope and North America",
        y="Average pairwise correlation:\nAsia,Africa,Oceania,Eurasia")+
