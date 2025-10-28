@@ -197,7 +197,7 @@ countrynoest_proj <- st_transform(countrynoest, "+proj=moll")
 
 countries_proj1<-st_transform(countries, "+proj=moll")
 
-## deltas 2010-2020
+## deltas 2012-2022
 countrychange%<>%filter(!is.na(delta))
 countrydelta_proj<-st_transform(countrychange,"+proj=moll")
 
@@ -772,7 +772,8 @@ ggsave(file=paste0(figfolder,"scatter_emissions_concern_europeregions_",modelnam
 
 ## load survey data and collapse time periods (have to do this anew here b/c survey.data saved in data input only contains questions used...no action or awareness questions) #### 
 load(paste0("inputs/megapoll_globalmrp_ordinal_replication.Rda"))
-
+load(paste0("inputs/surveys_nonpublic.Rda")) 
+## merge these two together. 
 survey.data%<>%filter(as.numeric(year)>=2002)
 
 
@@ -832,12 +833,7 @@ for(i in 1:length(qlist)){
   country.yr.means[[i]]<-d
 }
 country.yr.means<-do.call(rbind,country.yr.means)
-
-## load non-public data 
-load(paste0("inputs/surveys_nonpublic.Rda"))
-
-
-country.yr.means%<>%bind_rows(country.yr.means.np) ## merge with the non-public data. This is only 4 questions
+country.yr.means%<>%bind_rows(country.yr.means.np) ## merge with the non-public data. This is only 3 questions
 unique(country.yr.means.np$question)
 country.yr.means.wide<-pivot_wider(country.yr.means,id_cols=c(iso_3166),names_from="question",values_from="val")
 cormat.yr<-cor(country.yr.means.wide[,2:ncol(country.yr.means.wide)],use="pairwise.complete.obs")
@@ -857,17 +853,13 @@ corrplot(cormat.yr,order="alphabet",
          tl.cex=.5,number.cex=0.5)
 dev.off()
 
-# correlation matrix divided by global north vs. global south ####
+# correlation matrix divided by global north vs. global south 
 ## limit to questions with 30+ countries, merge in continent names so I can look at these correlations 
 ## by Global North vs. Global South (very roughly approximated by Europe + North America vs. rest of world)
-
-## if want to further restrict the questions entering here
-# qlist<-filter(n.qns,ctry.n>=30)
-# qlist<-unique(qlist$question)
-# qlist<-qlist[-grep("aware",qlist)]
+qlist<-filter(n.qns,ctry.n>=30)
+qlist<-unique(qlist$question)
 country.yr.means%<>%filter(question%in%qlist==TRUE)
-country.yr.means.wide%<>%select(iso_3166,all_of(qlist))
-# country.yr.means.wide%<>%select(iso_3166)
+country.yr.means.wide%<>%select(-all_of(qlist))
 continents<-est.nat%>%select(iso_3166,Continent_Name)%>%distinct()
 country.yr.means%<>%left_join(continents)%>%
   mutate(europeus=ifelse(Continent_Name%in%c("Europe","North America")==TRUE,"yes","no"))
@@ -925,8 +917,8 @@ c(max(avgcor$`cor=yes`,na.rm=TRUE),max(avgcor$`cor=no`,na.rm=TRUE),min(avgcor$`c
 corplot_northsouth<-ggplot(avgcor,aes(x=`cor=yes`,y=`cor=no`,label=var))+
   geom_text(size=2.5)+
   # geom_point()+
-  scale_x_continuous(limits=c(0,1))+ ## ensure that these limits include maxes and mins above
-  scale_y_continuous(limits=c(0,1))+
+  scale_x_continuous(limits=c(-0.5,1))+ ## ensure that these limits include maxes and mins above
+  scale_y_continuous(limits=c(-0.5,1))+
   geom_abline(slope=1,intercept=0,lty="dashed")+
   labs(x="Average pairwise correlation:\nEurope and North America",
        y="Average pairwise correlation:\nAsia,Africa,Oceania,Eurasia")+

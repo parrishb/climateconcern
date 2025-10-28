@@ -22,7 +22,8 @@ if (Sys.info()["user"] =="clara"){
 # set model name
 modelname<-"country_walk_region_walk_fxdstart" ## new model 240715
 timecollapse<-"2yr"
-qrestrict<-"concernhuman"
+qrestrict<-"concernhuman1" ## set this to concernhuman1, 2, or 3 to run with the thinned datasets
+thinned<-"True"
 
 
 # datafilter<-"none"
@@ -31,10 +32,18 @@ datafilter<-paste(timecollapse,qrestrict,sep="_")
 betas_sequence <- F
 
 #load model result
+if(thinned=="False"){
 if(exists("datafilter")){
 load(paste0("outputs_stan/stan_summ_",modelname,"_",datafilter,".Rdata"))
 }else{
 load(paste0("outputs_stan/stan_summ_",modelname,".Rdata"))
+}
+}elseif(thinned=="True"){
+  if(exists("datafilter")){
+    load(paste0("outputs_stan/stan_summ_",modelname,"_",datafilter,".Rdata"))
+  }else{
+    load(paste0("outputs_stan/stan_summ_",modelname,".Rdata"))
+  } 
 }
 summ_stan$parameter <- sub("\\[.+\\]", "", summ_stan$variable)
 
