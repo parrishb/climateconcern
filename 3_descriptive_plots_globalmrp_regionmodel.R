@@ -841,6 +841,7 @@ cormat.yr<-cor(country.yr.means.wide[,2:ncol(country.yr.means.wide)],use="pairwi
 ## find average correlation for each variable 
 cormat.df<-data.frame(cormat.yr)
 avgcor<-apply(cormat.df,MARGIN = 2,mean,na.rm=TRUE)
+quantile(avgcor) ## 25% is 0.29, 50% is 0.4, 75% is 0.46, 100% is 0.76. this seems acceptable to me
 avgcor<-data.frame(var=names(cormat.df),cor=round(avgcor,2))%>%
   mutate(cor=paste(var,cor,sep=": "))
 rownames(cormat.yr)<-avgcor$cor
@@ -852,6 +853,18 @@ corrplot(cormat.yr,order="alphabet",
          tl.pos="lt",
          tl.cex=.5,number.cex=0.5)
 dev.off()
+
+# ## calculate eigenvalues and scree plot for questions that we have full information for #### 
+## this doesn't tell us much because we have so much missingness
+# cormat.full<-cormat.df%>%filter_all(~!is.na(.))
+# cormat.full%<>%select(rownames(cormat.full)[-grep("aware",rownames(cormat.full))])
+# cormat.full<-cormat.full[-grep("aware",rownames(cormat.full)),]
+# 
+# ev.m<-eigen(cormat.full)
+# ap.m<-parallel(subject=nrow(cormat.full),var=ncol(cormat.full),rep=100,cent=0.05)
+# ns.m<-nScree(x=ev.m$values,ap=ap.m$eigen$qevpea)
+# plotnScree(ns.m,main="Scree plot for full dataset")
+
 
 # correlation matrix divided by global north vs. global south 
 ## limit to questions with 30+ countries, merge in continent names so I can look at these correlations 

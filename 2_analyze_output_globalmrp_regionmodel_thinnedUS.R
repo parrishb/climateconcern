@@ -100,6 +100,28 @@ bw.nat<-readstata13::read.dta13("predictors/bergquistwarshaw_national.dta")%>%
   group_by(year2)%>%
   summarise(climate_concern_median=quantile(mass_climate_concern,probs=0.5,na.rm=TRUE))
 
+us.nat<-est.nat%>%
+  filter(iso_3166=="US")
+table(us.nat$year)
+us.nat%<>%left_join(bw.nat,by=c("year"="year2"))%>%
+  filter(!is.na(climate_concern_median))
+cor(us.nat$climate_concern_median,us.nat$mean,use="complete.obs") ## 0.16
+
+### Figure S7: time-series plot with national data ####
+usnatplot<-ggplot(us.nat,aes(x=mean,y=climate_concern_median,label=year))+
+  geom_text()+
+  annotate(geom="text",x=1,y=-1,label=round(cor(us.nat$mean,us.nat$climate_concern_median,use="complete.obs"),2),
+           color="blue")+
+  labs(x="Global climate concern (US)",y="US climate concern\n(Bergquist and Warshaw 2019)")+
+  geom_smooth(method="lm",se=FALSE)+
+  # scale_x_continuous(limits=c(0.9,1.2))+
+  # scale_x_continuous(limits=c(0.5,1.75))+
+  # scale_y_continuous(limits=c(-1.2,0))+
+  theme_bw()
+usnatplot
+ggsave(filename=paste0(figfolder,"validation_correlations_nationaltimeseries-",modelname,datafilter,".pdf"),
+       width=6.5,height=3.5,usnatplot)
+
 
 ## sub-national correlations with Bergquist and Warshaw data ####
 us<-est.reg%>%
