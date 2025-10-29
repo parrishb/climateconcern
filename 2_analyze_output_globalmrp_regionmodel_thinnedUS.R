@@ -22,8 +22,9 @@ onUser<-function(x){
 
 # set your working directory and figure output folders here #### 
 if(onUser("pberg")){
-  setwd("~/Documents/GitHub/climateconcern")
-  figfolder<-"~/Documents/GitHub/climateconcern/figures/"
+  setwd("~/Documents/GitHub/globalmrp/globalmrp_hpc/")
+  figfolder<-"~/Documents/GitHub/globalmrp/figures/"
+  replication<-"~/Documents/GitHub/climateconcern/"
   # dropbox<-"~/Dropbox (Personal)/global_mrp/"
 }
 ## Clara set up your folders here
@@ -38,7 +39,7 @@ source("globalmrp_functions.R")
 modelname<-"country_walk_region_walk_fxdstart_thinned" ## new model 240715
 timecollapse<-"2yr"
 qrestrict<-"concernhuman"
-iter<-"3"
+iter<-"1"
 datafilter<-paste0(timecollapse,"_",qrestrict,iter)
 
 # geogfilter<-"oecd"
@@ -83,7 +84,7 @@ sum(d.sum$size,dnat.sum$size) ## 3.9 million
 
 # validation2: compare estimates with Bergquist and Warshaw US dataset ####
 ## national time series comparison #### 
-bw.nat<-readstata13::read.dta13("predictors/bergquistwarshaw_national.dta")%>%
+bw.nat<-readstata13::read.dta13(paste0(replication,"predictors/bergquistwarshaw_national.dta"))%>%
   filter(year>=2002)%>%
   mutate(year2=case_when(
     year>2001&year<=2003~"2002-03",
@@ -129,7 +130,7 @@ us<-est.reg%>%
   separate(mergekey,into=c("us","abb"),sep="-")
 # us<-us%>%
 #   separate(mergekey,into=c("us","abb"),sep="-")
-bw<-read_csv("predictors/bergquistwarshaw_climate.csv")
+bw<-read_csv(paste0(replication,"predictors/bergquistwarshaw_climate.csv"))
 table(bw$period)
 table(us$year)
 ## for time-collapsed data
@@ -191,7 +192,7 @@ uscorplot<-us%>%
   theme_bw()+
   theme(strip.text.x=element_text(size=8),legend.position="bottom")
 uscorplot #
-ggsave(file=paste0(figfolder,"validation_correlations_statelevel-",modelname,"_",datafilter,"_",".pdf"),
+ggsave(file=paste0(figfolder,"validation_correlations_statelevel-",modelname,"_",datafilter,".pdf"),
          width=6.5,height=3.5,uscorplot)
 
 

@@ -71,8 +71,10 @@ write_csv(surveydesc,file=paste0(figfolder,"country_data_summaries.csv"),col_nam
 
 ## find distribution of country-years, years, and questions in the data 
 glimpse(surveydesc)
-quantile(surveydesc$questions) ## 75th percentile is 16
-quantile(surveydesc$`question-years`) ## 75th percentile is 25.5 (26)
+quantile(surveydesc$questions) ## 75th percentile is 16, 50th is 8
+quantile(surveydesc$`question-years`) ## 75th percentile is 25.5 (26), 50th is 12
+quantile(surveydesc$years) ## 75th is 8, 50th is 5
+quantile(surveydesc$questions,.6) ## 60th percentile is 10 questions
 
 qs_in_model<-unique(d$question) 
 length(unique(survey.data$source2)) ## 97 sources (this number will not be right in replication because of non-public sources)

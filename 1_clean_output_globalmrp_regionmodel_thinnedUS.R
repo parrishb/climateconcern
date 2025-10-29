@@ -9,7 +9,7 @@ library(ggrepel)
 # source("globalmrp_functions.R")
 
 if(Sys.info()["user"] == "pberg"){
-  setwd("~/Documents/GitHub/climateconcern")
+  setwd("~/Documents/GitHub/globalmrp/globalmrp_hpc")
 }
 
 if (Sys.info()["user"] =="clara"){
@@ -38,6 +38,13 @@ summ_stan$parameter <- sub("\\[.+\\]", "", summ_stan$variable)
 
 ## load input object to model (for recodes) 
 load(paste0("data/d_rstan_region_thinned_",timecollapse,"_",qrestrict,".Rda"))
+
+## how many respondents are in each dataset from the US? 
+sum(d.us1$size[d.us1$iso_3166=="US"]) ## 521,440
+sum(d.us2$size[d.us2$iso_3166=="US"]) ## 277,774
+sum(d.us3$size[d.us3$iso_3166=="US"]) ## 329,063
+## full sample from the us is 
+
 
 #separate indices from parameter names
 summ_stan$index<-summ_stan$variable
@@ -387,7 +394,7 @@ est.reg$mean.scl.bin<-cut(est.reg$mean.scl,breaks=c(-1,.1,.2,.3,.4,.5,.6,.7,.8,.
                                    "0.6-0.7","0.7-0.8","0.8-0.9","0.9-1"))
 
 ## load survey data
-load(paste0("inputs/megapoll_globalmrp_ordinal_replication.Rda"))
+load(paste0("~/Documents/Github/climateconcern/inputs/megapoll_globalmrp_ordinal_replication.Rda"))
 
 save(region.alphas,country.poststrat,difficulties,discrimination,d,d.nat,survey.data,est.nat,est.reg,
        file=paste0("outputs_stan/stan_clean_",modelname,"_",timecollapse,"_",qrestrict,iter,".Rdata"))
