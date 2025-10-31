@@ -23,3 +23,13 @@ To fully replicate the steps we took to estimate the model and analyze our resul
 
 An additional script is included, which is called rstan_prepdata_region.R. This script prepares the data for input into the climate concern model. The outputs from this script are contained in the folder called "data." We have included this script for transparency, but we are not authorized to share the individual-level data for some of the surveys included in our model. We have uploaded a modified version of the individual-level data (the input into rstan_prepdata_region.R), and this publicly shared version does not include the datasets we are not authorized to share. This means that users will not be able to replicate our results without obtaining for themselves these datasets. A separate text file will be uploaded with full information about these surveys and how users can obtain access to them and prepare them for inclusion in the model. 
 
+Several other additional scripts are included to run sub-national validations with artificially thinned datasets. These scripts produce figures that are only included in the Supplementary Materials. 
+
+1) rstan_prepdata_thinnedUSdata.R produces the simulated datasets that we use to replicate Figure S8. These datasets exclude randomly selected survey responses from the US, in order to compare a) the outputs from models run with these artificially thinned datasets with b) the independently estimated state-level climate concern measure from Bergquist & Warshaw 2019.
+
+2) MODEL SCRIPT HERE. 
+
+3) clean_output_globalmrp_regionmodel_thinnedUS.R cleans the outputs after running the model on the simulated datasets. 
+
+4) analyze_output_globalmrp_regionmodel_thinnedUS.R analyzes the outputs after running the model on the simulated datasets 
+

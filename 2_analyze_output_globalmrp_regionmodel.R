@@ -73,6 +73,7 @@ write_csv(surveydesc,file=paste0(figfolder,"country_data_summaries.csv"),col_nam
 glimpse(surveydesc)
 quantile(surveydesc$questions) ## 75th percentile is 16, 50th is 8
 quantile(surveydesc$`question-years`) ## 75th percentile is 25.5 (26), 50th is 12
+quantile(surveydesc$`question-years`,c(.5,.6,.75,.9,.95))
 quantile(surveydesc$years) ## 75th is 8, 50th is 5
 quantile(surveydesc$questions,.6) ## 60th percentile is 10 questions
 

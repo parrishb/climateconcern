@@ -39,7 +39,7 @@ source("globalmrp_functions.R")
 modelname<-"country_walk_region_walk_fxdstart_thinned" ## new model 240715
 timecollapse<-"2yr"
 qrestrict<-"concernhuman"
-iter<-"1"
+iter<-"50a"
 datafilter<-paste0(timecollapse,"_",qrestrict,iter)
 
 # geogfilter<-"oecd"
@@ -64,18 +64,18 @@ length(unique(d$mergekey)) ## 2188 regions
 length(unique(d$question)) ## 78 questions
 
 ## find number of survey responses 
-d.sum<-d%>%
-  select(question,mergekey,size,year2)%>%
-  group_by(question,mergekey,year2)%>%
-  distinct()%>%
-  summarise(size=sum(size))
-sum(d.sum$size)
-dnat.sum<-d.nat%>%
-  select(question,iso_3166,size,year2)%>%
-  group_by(question,iso_3166,year2)%>%
-  distinct()%>%
-  summarise(size=sum(size))
-sum(d.sum$size,dnat.sum$size) ## 3.9 million 
+# d.sum<-d%>%
+#   select(question,mergekey,size,year2)%>%
+#   group_by(question,mergekey,year2)%>%
+#   distinct()%>%
+#   summarise(size=sum(size))
+# sum(d.sum$size)
+# dnat.sum<-d.nat%>%
+#   select(question,iso_3166,size,year2)%>%
+#   group_by(question,iso_3166,year2)%>%
+#   distinct()%>%
+#   summarise(size=sum(size))
+# sum(d.sum$size,dnat.sum$size) ## 3.9 million 
 
 
 
@@ -172,7 +172,7 @@ us<-left_join(us,bw,by=c("abb","year"="year2"))
 library(fixest)
 
 statemod<-lm(mean.scl~climate+factor(abb),data=us)
-partial_r2(statemod,covariates="climate") ## 0.25
+partial_r2(statemod,covariates="climate") 
 
 cordataus<-us%>%
   filter(!is.na(climate))%>%

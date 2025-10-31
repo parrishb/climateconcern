@@ -23,7 +23,7 @@ if (Sys.info()["user"] =="clara"){
 modelname<-"country_walk_region_walk_fxdstart_thinned" ## new model 240715
 timecollapse<-"2yr"
 qrestrict<-"concernhuman" ## set this to concernhuman1, 2, or 3 to run with the thinned datasets
-iter<-"3"
+iter<-"50a"
 
 # datafilter<-"none"
 # datafilter<-paste(timecollapse,qrestrict,sep="_")
@@ -32,18 +32,23 @@ betas_sequence <- F
 
 #load model result
 
-load(paste0("outputs_stan/stan_summ_",modelname,"_",timecollapse,"_",qrestrict,iter,".Rdata"))
+load(paste0("outputs_stan/stan_summ_",modelname,"_",timecollapse,"_",qrestrict,"_",iter,".Rdata"))
 
 summ_stan$parameter <- sub("\\[.+\\]", "", summ_stan$variable)
 
 ## load input object to model (for recodes) 
-load(paste0("data/d_rstan_region_thinned_",timecollapse,"_",qrestrict,".Rda"))
+load(paste0("data/d_rstan_region_thinned_",timecollapse,"_",qrestrict,"_",iter,".Rda"))
 
-## how many respondents are in each dataset from the US? 
-sum(d.us1$size[d.us1$iso_3166=="US"]) ## 521,440
-sum(d.us2$size[d.us2$iso_3166=="US"]) ## 277,774
-sum(d.us3$size[d.us3$iso_3166=="US"]) ## 329,063
+## how many respondents are in the dataset from the US? 
+sum(d$size[d$iso_3166=="US"]) ## 278005 for 75a; 275436 for 75b; 368508 for 75c
+## 412593 for 60a; 271426 for 60b
+## 350258 for 50a
 ## full sample from the us is 
+## find question-years 
+d.us<-d%>%filter(iso_3166=="US")%>%
+  select(question,year2)%>%
+  mutate(questionyear=paste0(question,year2))%>%
+  select(questionyear)%>%distinct()
 
 
 #separate indices from parameter names
@@ -60,8 +65,6 @@ summ_stan<-summ_stan%>%
 
 
 # extract parameters (by type) and convert indices to names ####
-## set d to be the iteration that we are working with
-d<-d.us1
 
 # region alphas: go from indices to years, regions and countries
 regions<-d%>%select(regioncode_int,mergekey)%>%distinct()
@@ -232,7 +235,6 @@ countrynames<-read_csv("basedata/Covariates/region_covariates.csv")%>%
 country.poststrat<-left_join(country.poststrat,countrynames,by="iso_3166")
 
 # examine country names for issues and correct:
-sort(unique(country.poststrat$NAME_0_gadm)) 
 country.poststrat$NAME_0_gadm[country.poststrat$iso_3166=="CI"]<-"Cote d'Ivoire"
 nrow(country.poststrat[is.na(country.poststrat$NAME_0_gadm),]) ## should be zero. if not, check for naming errors. 
 
