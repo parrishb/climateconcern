@@ -23,7 +23,7 @@ if (Sys.info()["user"] =="clara"){
 modelname<-"country_walk_region_walk_fxdstart_thinned" ## new model 240715
 timecollapse<-"2yr"
 qrestrict<-"concernhuman" ## set this to concernhuman1, 2, or 3 to run with the thinned datasets
-iter<-"50a"
+iter<-"90b"
 
 # datafilter<-"none"
 # datafilter<-paste(timecollapse,qrestrict,sep="_")
@@ -40,9 +40,9 @@ summ_stan$parameter <- sub("\\[.+\\]", "", summ_stan$variable)
 load(paste0("data/d_rstan_region_thinned_",timecollapse,"_",qrestrict,"_",iter,".Rda"))
 
 ## how many respondents are in the dataset from the US? 
-sum(d$size[d$iso_3166=="US"]) ## 278005 for 75a; 275436 for 75b; 368508 for 75c
+sum(d$size[d$iso_3166=="US"]) ## 326032 for 75a; 275436 for 75b; 368508 for 75c
 ## 412593 for 60a; 271426 for 60b
-## 350258 for 50a
+## 98,918 for 50a
 ## full sample from the us is 
 ## find question-years 
 d.us<-d%>%filter(iso_3166=="US")%>%

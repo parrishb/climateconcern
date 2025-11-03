@@ -13,6 +13,7 @@ library(xtable)
 library(magrittr)
 library(tidyverse)
 library(grid)
+library(ggpubr)
 
 onUser<-function(x){
   user<-Sys.info()["user"]
@@ -39,7 +40,7 @@ source("globalmrp_functions.R")
 modelname<-"country_walk_region_walk_fxdstart_thinned" ## new model 240715
 timecollapse<-"2yr"
 qrestrict<-"concernhuman"
-iter<-"50a"
+iter<-"50b"
 datafilter<-paste0(timecollapse,"_",qrestrict,iter)
 
 # geogfilter<-"oecd"
@@ -106,22 +107,54 @@ us.nat<-est.nat%>%
 table(us.nat$year)
 us.nat%<>%left_join(bw.nat,by=c("year"="year2"))%>%
   filter(!is.na(climate_concern_median))
-cor(us.nat$climate_concern_median,us.nat$mean,use="complete.obs") ## 0.16
+cor(us.nat$climate_concern_median,us.nat$mean,use="complete.obs") ## note that if we exclude 2004-05 from these correlations, they improve quite a bit.
+cor(us.nat$climate_concern_median[us.nat$year!="2004-05"],us.nat$mean[us.nat$year!="2004-05"],use="complete.obs")
+
+### faceted time series with B&W vs. our data, showing trends #### 
+usnatplot.pairedscatter<-us.nat%>%
+  pivot_longer(cols=c(climate_concern_median,mean.scl),values_to="est",names_to="measure")%>%
+  mutate(measure=ifelse(measure=="mean.scl","Global climate concern","Bergquist & Warshaw climate concern"))%>%
+  ggplot(aes(x=year,y=est))+
+  geom_point()+
+  geom_smooth(method="lowess",se=FALSE)+
+  facet_wrap(~measure,ncol=1,nrow=2,scales="free")+
+  labs(x="year",y="Estimated US climate concern")+
+  theme_bw()
+usnatplot.pairedscatter
+ggsave(filename=paste0(figfolder,"validation_correlations_nationaltimeseries_pairedscatter-",modelname,datafilter,".pdf"),
+       width=6.5,height=3.5,usnatplot.pairedscatter)
 
 ### Figure S7: time-series plot with national data ####
 usnatplot<-ggplot(us.nat,aes(x=mean,y=climate_concern_median,label=year))+
-  geom_text()+
-  annotate(geom="text",x=1,y=-1,label=round(cor(us.nat$mean,us.nat$climate_concern_median,use="complete.obs"),2),
+  geom_text(size=2.5)+
+  annotate(geom="text",x=1.05,y=-1,label=round(cor(us.nat$mean,us.nat$climate_concern_median,use="complete.obs"),2),
            color="blue")+
-  labs(x="Global climate concern (US)",y="US climate concern\n(Bergquist and Warshaw 2019)")+
+  labs(x="",y="")+
   geom_smooth(method="lm",se=FALSE)+
   # scale_x_continuous(limits=c(0.9,1.2))+
   # scale_x_continuous(limits=c(0.5,1.75))+
   # scale_y_continuous(limits=c(-1.2,0))+
   theme_bw()
 usnatplot
-ggsave(filename=paste0(figfolder,"validation_correlations_nationaltimeseries-",modelname,datafilter,".pdf"),
-       width=6.5,height=3.5,usnatplot)
+
+usnatplot.no0405<-ggplot(us.nat[us.nat$year!="2004-05",],aes(x=mean,y=climate_concern_median,label=year))+
+  geom_text(size=2.5)+
+  annotate(geom="text",x=1.05,y=-1,label=round(cor(us.nat$mean[us.nat$year!="2004-05"],us.nat$climate_concern_median[us.nat$year!="2004-05"],use="complete.obs"),2),
+           color="blue")+
+  labs(x="",y="")+
+  geom_smooth(method="lm",se=FALSE)+
+  # scale_x_continuous(limits=c(0.9,1.2))+
+  # scale_x_continuous(limits=c(0.5,1.75))+
+  # scale_y_continuous(limits=c(-1.2,0))+
+  theme_bw()
+usnatplot.no0405
+usnatplot2<-ggarrange(usnatplot,usnatplot.no0405,ncol=1,nrow=2)
+ggsave(paste0(figfolder,"validation_correlations_nationaltimeseries-",modelname,datafilter,".pdf"),
+       width=6.5,height=4.5,
+       annotate_figure(usnatplot2,bottom=text_grob("Global climate concern (US)"),
+                                            left=text_grob("US climate concern\n(Bergquist and Warshaw 2019)",rot=90)))
+# ggsave(filename=paste0(figfolder,"validation_correlations_nationaltimeseries-",modelname,datafilter,".pdf"),
+#        width=6.5,height=3.5,usnatplot)
 
 
 ## sub-national correlations with Bergquist and Warshaw data ####
