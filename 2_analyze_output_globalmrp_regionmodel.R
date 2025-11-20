@@ -127,8 +127,8 @@ n.qns<-d.samples%>%
 sort(unique(n.qns$source2))
 
 ## how many sources and questions in the model? ####
-length(unique(n.qns$source2)) ## 77 sources these numbers will be wrong in replication code because of non-public data
-length(unique(n.qns$question)) ## 81 questions
+length(unique(n.qns$source2)) ## these numbers will be wrong in replication code because of non-public data
+length(unique(n.qns$question)) 
 
 ## for reviewers memo, look at correlation with raw data from the Dynata survey
 dynata<-d.samples%>%
@@ -157,13 +157,6 @@ print.xtable(xtable(d.dynata%>%
   select(question,corr)%>%
   distinct()%>%
     rename(correlation=corr)),include.rownames = FALSE)
-# ggplot(d.dynata,aes(x=prop.scl,y=mean,label=iso_3166))+
-#   geom_text()+
-#   geom_text(aes(label=corr,x=2,y=2),color="blue")+
-#   # geom_abline(intercept=0,slope=1,lty="dotted")+
-#   # scale_x_continuous(limits=c(0,3))+
-#   # scale_y_continuous(limits=c(0,3))+
-#   facet_wrap(~question)
 
 ## For figure S5, filter to questions with more than 30 countries included
 qlist<-filter(n.qns,ctry.n>=30)%>%
@@ -216,7 +209,7 @@ d.val<-left_join(d.val,discrimination2,by="question")%>%
 ## look at correlations between model estimates and raw data 
 d.val<-d.val%>%mutate(prop=avg.resp) ## create a new variable for avg. response, so i can use consistent code for ordinal and binary data
 cordata<-d.val%>%
-  filter(!is.na(mean))%>%## comment this line out once I've sorted things so that all countries match between output and input (XK only remains)
+  filter(!is.na(mean))%>%
   group_by(question,year2)%>%
   reframe(ncountries=n_distinct(iso_3166),
             prop.scl=scale(prop)[,1], ## scale values within each question-year
@@ -224,10 +217,6 @@ cordata<-d.val%>%
   ungroup()%>%
   select(-prop.scl)%>%
   distinct()%>%
-  # filter(!is.na(discrimination))%>% 
-  # group_by(question,year2)%>% #source2,
-  # summarize(ncountries=n_distinct(iso_3166),
-  #           corr=round(cor(prop,mean,use="everything"),2))%>% ### changed this from "complete.obs" to "everything" when changed to do this on full dataset
   arrange(desc(corr))%>%
   filter(ncountries>1)
 nrow(d.val[d.val$question%in%cordata$question[is.na(cordata$corr)],]) ## nothing. good. 
@@ -576,86 +565,7 @@ if(exists("datafilter")){
                include.rownames=FALSE,file=paste0(figfolder,"timeseries",datafilter,"_",modelname,".tex"))
 }
 
-# ### predictive ability of our climate concern estimates on european ideology (DELETE IF DON'T USE) ####
-# ## Dunlap and Mccright have a 2015 paper showing stronger correlation in western vs. post-communist countries. maybe we show that? 
-# ideo<-haven::read_dta("~/Documents/GitHub/globalmrp/globalmrp_hpc/inputs/europe_ideology.dta")%>%
-#   mutate(biennium=as_factor(biennium))%>%
-#   mutate(year=substr(as.character(biennium),6,nchar(as.character(biennium)))) ## use 2nd year of biennium here 
-# 
-# country.poststrat2<-country.poststrat%>%
-#   mutate(year2 = str_c(str_sub(year2, 1, 5),"20",str_sub(year2, 6, str_length(year2))))%>%
-#   mutate(year=substr(year2,1,4)) ## use 1st year of biennium here. 
-# ## So we're merging, eg, 2003-2004 ideology into 2004-2005 climate concern 
-# 
-# country.poststrat2%<>%
-#   left_join(ideo%>%select(year,country,econ_abs_post_mean,soc_post_mean),
-#             by=c("NAME_0_gadm"="country","year"))
-# nrow(country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),]) ## 200 values here
-# unique(country.poststrat2$NAME_0_gadm[!is.na(country.poststrat2$econ_abs_post_mean)])
-# 
-# 
-# ## find correlation in each year
-# cordata_europe<-country.poststrat2%>%
-#   filter(!is.na(econ_abs_post_mean))%>%
-#   group_by(year)%>% ## year2? 220813
-#   summarize(ideocorr=round(cor(mean,econ_abs_post_mean,use="complete.obs"),2))%>%
-#   arrange(desc(ideocorr))
-# country.poststrat2%<>%
-#   left_join(cordata_europe,by="year") 
-# 
-# ## cross-sectional correlations: 
-# ideocorplot<-country.poststrat2%>%
-#   filter(!is.na(econ_abs_post_mean))%>%
-#   ggplot(aes(x=mean,y=econ_abs_post_mean,label=NAME_0_gadm))+
-#   geom_text(size=2)+
-#   geom_text(data=country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),],aes(x=1,y=4,label=ideocorr),color="blue")+
-#   facet_wrap(~year,nrow=6,ncol=4)+ 
-#   labs(x="Global climate concern",y="Economic conservatism\n(Caughey, O'Grady, & Warshaw)")+
-#   theme_bw()+
-#   theme(strip.text.x=element_text(size=8),legend.position="bottom")
-# ideocorplot#
-# if(exists("datafilter")){
-#   ggsave(file=paste0(figfolder,"validation_correlations_europeideology-",modelname,"_",datafilter,"_",".pdf"),
-#          width=6.5,height=3.5,ideocorplot)
-# }else{
-#   ggsave(file=paste0(figfolder,"validation_correlations_europeideology-",modelname,"_",".pdf"),
-#          width=6.5,height=3.5,ideocorplot)
-# }
-# 
-# ## create indicator for post-communism
-# europe<-unique(country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),"NAME_0_gadm"])
-# print(europe,n=Inf)
-# country.poststrat2%<>%
-#   mutate(postcom=ifelse(NAME_0_gadm%in%c("Bulgaria","Czech Republic","Estonia","Hungary","Lithuania","Latvia","Slovenia","Slovakia")==TRUE,"postcom","western"))
-# 
-# cordata_europe2<-country.poststrat2%>%
-#   filter(!is.na(econ_abs_post_mean))%>%
-#   group_by(year,postcom)%>% ## year2? 220813
-#   summarize(ideocorr2=round(cor(mean,econ_abs_post_mean,use="complete.obs"),2))%>%
-#   arrange(desc(ideocorr2))
-# country.poststrat2%<>%
-#   left_join(cordata_europe2,by=c("year","postcom"))
-# 
-# ideocorplot2<-country.poststrat2%>%
-#   filter(!is.na(econ_abs_post_mean))%>%
-#   ggplot(aes(x=mean,y=econ_abs_post_mean,label=NAME_0_gadm))+
-#   geom_text(size=2)+
-#   geom_text(data=country.poststrat2[!is.na(country.poststrat2$econ_abs_post_mean),],aes(x=1,y=4,label=ideocorr2),color="blue")+
-#   facet_wrap(~year~postcom,nrow=6,ncol=4)+ 
-#   labs(x="Global climate concern",y="Economic conservatism\n(Caughey, O'Grady, & Warshaw)")+
-#   theme_bw()+
-#   theme(strip.text.x=element_text(size=8),legend.position="bottom")
-# ideocorplot2 ## we see a mostly stronger relationship in western countries, but not in every year (and 2008/ 2010 are notable and problematic exceptions)
-# 
-# if(exists("datafilter")){
-#   ggsave(file=paste0(figfolder,"validation_correlations_europeideology_postcom-",modelname,"_",datafilter,"_",".pdf"),
-#          width=6.5,height=9,ideocorplot2)
-# }else{
-#   ggsave(file=paste0(figfolder,"validation_correlations_europeideology_postcom-",modelname,"_",".pdf"),
-#          width=6.5,height=9,ideocorplot2)
-# }
-
-### validation of 2 time point comparison. use pew worry questions. delete if don't use. #### 
+### validation of 2 time point comparison. use pew worry questions. #### 
 q.vals<-c("worry_serious_pew","worry_climatethreat_pew")
 d.yesresponses.val<-survey.data%>%
   select(all_of(q.vals),year2,iso_3166)%>%
@@ -685,38 +595,6 @@ d.val<-d.val%>%
   left_join(country.est,by=c("iso_3166","year2")) ## year2? 220813
 table(d.val$question,d.val$year2) ### worry_climatethreat_pew is a good candidate here...asked in 2012/13-2022/23
 
-# ## see what this looks like with worry_serious_pew-- delete if don't use
-# d.val%<>%filter(question=="worry_serious_pew",year2%in%c("2006-07","2014-15")==TRUE)
-# delta.sd<-d.val%>%
-#   filter(year2=="2006-07")%>%
-#   group_by(year2)%>%
-#   summarise_at(c("yes","mean"),list(sd=~sd((.),na.rm=TRUE)))%>%
-#   select(-year2)%>%
-#   # rename("yes"="yes_sd","mean"="mean_sd")%>%
-#   pivot_longer(cols=everything(),names_to="var",values_to="sdev")
-# d.val%<>%pivot_wider(names_from=year2,values_from=c(yes,mean))%>%
-#   mutate(meandiff=`mean_2014-15`-`mean_2006-07`,
-#          yesdiff=`yes_2014-15`-`yes_2006-07`)%>%
-#   mutate(meandiff.std=meandiff/delta.sd$sdev[delta.sd$var=="mean_sd"],
-#          yesdiff.std=yesdiff/delta.sd$sdev[delta.sd$var=="yes_sd"])
-# quartz(12,12)
-# pewplot<-
-#   ggplot(d.val,aes(x=meandiff.std,y=yesdiff.std,label=iso_3166))+
-#   geom_text()+
-#   scale_y_continuous(limits=c(-1,2))+
-#   scale_x_continuous(limits=c(-1,2))+
-#   geom_abline(slope=1,intercept=0)+
-#   geom_hline(yintercept=0,lty="dotted",color="red")+
-#   geom_vline(xintercept=0,lty="dotted",color="red")+
-#   theme_bw()+
-#   labs(x="Change in climate concern\n(2006-07 standard deviations)",
-#        y="Change in country-aggregated survey responses\n(2006-07 standard deviations)",
-#        title="Change in worry_climatethreat_pew and climate concern estimates,\n2006-07 --2014-15")
-# pewplot
-# ggsave(filename=paste0(figfolder,"validation_2006-2014.pdf"),width=6.5,height=6.5,pewplot)
-
-
-## now see what it looks like with worry_climatethreat_pew
 d.val<-full_join(d.yesresponses.val,d.samples.val,by=c("iso_3166","question","year2"))%>%
   filter(size!=0)%>%
   select(-size)
@@ -756,65 +634,3 @@ pewplot<-
        )
 pewplot
 ggsave(filename=paste0(figfolder,"validation_2012-2022.pdf"),width=6.5,height=6.5,pewplot)
-
-
-
-
-
-
-
-# ### validation of comparison between 2010-11 and 2022-23 estimates--DELETE IF DON'T USE ####
-# d.yesresponses<-survey.data%>%
-#   select(all_of(qs_in_model),year2,iso_3166)%>%
-#   mutate_at(qs_in_model,as.numeric)%>%
-#   filter(year2%in%c("2010-11","2022-23")==TRUE)%>%
-#   group_by(iso_3166,year2)%>%
-#   summarise_at(qs_in_model,~mean((.),na.rm=TRUE))%>%
-#   ungroup()
-# 
-# d.samples<-survey.data%>%
-#   select(all_of(qs_in_model),year2,iso_3166)%>%
-#   mutate_at(qs_in_model,as.numeric)%>%
-#   filter(year2%in%c("2010-11","2022-23")==TRUE)%>%
-#   group_by(iso_3166,year2)%>%
-#   summarise_at(vars(qs_in_model),list(n=~sum(!is.na(.))))%>%
-#   ungroup()
-# d.samples<-d.samples%>%
-#   pivot_longer(cols=3:ncol(d.samples),names_to="question",values_to="size")%>%
-#   mutate(question=substr(question,1,nchar(question)-2))
-# 
-# ## combine into single dataset and get proportion of yes responses
-# d.yesresponses<-d.yesresponses%>%
-#   pivot_longer(cols=3:ncol(d.yesresponses),names_to='question',values_to='yes')
-# d.val<-full_join(d.yesresponses,d.samples,by=c("iso_3166","question","year2"))%>%
-#   filter(size!=0)
-# d.val%<>%
-#   bind_rows(d.val.np2) ## merge in prepared data from aggregated gallup data
-# 
-# country.est<-country.poststrat%>%select(iso_3166,year2,mean)## year2? 220813
-# d.val<-d.val%>%
-#   left_join(country.est,by=c("iso_3166","year2")) ## year2? 220813
-# 
-# ## limit the above to questions asked in both 2010 and 2022...
-# qs.2010_2022<-d.val%>%
-#   select(year2,iso_3166,question)%>%
-#   filter(year2%in%c("2010-11","2022-23"))%>%
-#   mutate(yearquestion=paste(year2,question,sep="-"))%>%
-#   select(question,yearquestion)%>%
-#   distinct()%>%
-#   group_by(question)%>%
-#   summarise(n=n())%>%
-#   filter(n>=2)
-# sel<-unique(qs.2010_2022$question)
-# 
-# d.val%<>%filter(question%in%sel)
-# 
-# dwide<-d.val%>%
-#   pivot_wider(names_from="question",values_from="yes")%>%
-#   mutate_at(c(6:ncol(.)),~scale(.))%>% ## standardize these columns
-#   pivot_longer(cols=c(6:ncol(.)),names_to="question",values_to="yes.scl")
-# d.val<-d.val%>%left_join(dwide,by=intersect(names(d.val),names(dwide)))
-
-
-
-

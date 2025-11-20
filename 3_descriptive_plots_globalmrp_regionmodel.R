@@ -81,7 +81,7 @@ length(unique(d$mergekey[grepl(".nat",d$mergekey)==FALSE])) ## 2168
 
 ## number of countries where concern increased 
 # increase in global climate concern 
-est.nat%<>%filter(year%in%c("2012-13","2022-23")) ## CHANGE THESE TO MATCH MAPS
+est.nat%<>%filter(year%in%c("2012-13","2022-23")) 
 est.reg%<>%filter(year%in%c("2012-13","2022-23"))
 est.nat%>%
   select(iso_3166,mean.scl,year)%>%
@@ -187,8 +187,6 @@ countrynoest2<-countries%>%filter(is.na(mean.std))%>%
   mutate(year="2022-23")
 countrynoest<-rbind(countrynoest1,countrynoest2)
 rm(list=c("countrynoest1","countrynoest2"))
-# countryest<-as_Spatial(countryest)
-# countries<-as_Spatial(countries)
 quartz(12,12)
 
 ## World map in equal area projection
@@ -205,13 +203,8 @@ worldplot<-countrynoest_proj%>%
   ggplot()+
   theme_bw()+
   geom_sf(aes(geometry=geom),fill="lightgray",lwd=.1,color="darkgray")+ ## original
-  # geom_sf(aes(geometry=geom),fill="white",lwd=.1,color="darkgray")+ ## with white fill, for use with continuous color scale
   geom_sf(data=countryest_proj,aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+ ## continuous variable
   scale_fill_scico(palette = "roma", direction = -1)+
-  # scale_fill_gradientn(colours = custom_redblue,guide = guide_colorbar(reverse = TRUE)) +
-  # scale_fill_distiller(palette = "RdBu", direction = -1,guide = guide_colorbar(reverse = TRUE))+
-  # geom_sf(data=countryest_proj,aes(geometry=geom,fill=mean.scl.bin),lwd=.1,color="darkgray")+ ##  binned variable 
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
   labs(fill="Climate\nconcern")+
   theme_classic()+
   theme(axis.text=element_blank(),
@@ -237,9 +230,7 @@ worldplot_delta<-countrynoest_proj%>%
   theme_bw()+
   geom_sf(aes(geometry=geom),fill="lightgray",lwd=.1,color="darkgray")+
   geom_sf(data=countrydelta_proj,aes(geometry=geom,fill=delta),lwd=.1,color="darkgray")+
-  # scale_fill_distiller(palette="RdBu")+
   scale_fill_scico(palette = "roma", direction = -1)+
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
   labs(fill="Change in \nclimate\nconcern")+
   theme_classic()+
   theme(axis.text=element_blank(),
@@ -258,7 +249,6 @@ ggsave(file=paste0(figfolder,"map_delta_",modelname,"_",datafilter,".pdf"),heigh
 ## subnational maps of Europe #### 
 regions[is.na(regions$year)==TRUE,]$year <- "2022-23"
 europe <- st_transform(regions, "+proj=aea +lat_1=43 +lat_2=62 +lat_0=30 +lon_0=10 +x_0=0 +y_0=0 +ellps=intl +units=m +no_defs ")
-# countries_proj <- st_transform(countrynoest, "+proj=aea +lat_1=43 +lat_2=62 +lat_0=30 +lon_0=10 +x_0=0 +y_0=0 +ellps=intl +units=m +no_defs ")
 countries_proj<-st_transform(countries_proj1, "+proj=aea +lat_1=43 +lat_2=62 +lat_0=30 +lon_0=10 +x_0=0 +y_0=0 +ellps=intl +units=m +no_defs ")
 europe2022 <- europe[europe$year=="2022-23",]
 quartz(12,12)
@@ -266,15 +256,10 @@ quartz(12,12)
 europlot<-europe2022%>%
   ggplot()+
   theme_bw()+
- # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
   geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
-  # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
   scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
-  # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
-  # geom_sf(data=europecountries,aes(geometry=geom),lwd=.2,color="darkgray",fill=NA)+
   theme(axis.text=element_blank(),
         axis.title= element_blank(),
         axis.ticks = element_blank(),
@@ -285,7 +270,6 @@ europlot<-europe2022%>%
                          style=north_arrow_orienteering(text_size=4)) +  
   coord_sf()+
   coord_sf(xlim = c(-2000000, 2000000), ylim = c(0, 5000000))
-#  facet_wrap(~year)
 europlot
 
 
@@ -298,12 +282,8 @@ quartz(12,12)
 eastasiaplot<-eastasia%>%
   ggplot()+
   theme_bw()+
-  # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
   geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
-  # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
   scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
-  # labs(fill="Climate concern\n(st.dev from global mean)")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
   labs(fill="Climate\nconcern")+
   theme(axis.text=element_blank(),
@@ -315,7 +295,6 @@ eastasiaplot<-eastasia%>%
   annotation_north_arrow(height=unit(.5,"cm"),width=unit(.35,"cm"),
                          style=north_arrow_orienteering(text_size=4)) +  
   coord_sf(xlim = c(-2500000, 3500000), ylim = c(-3000000, 4000000))
-#  facet_wrap(~year)
 eastasiaplot
 ggsave(file=paste0(figfolder,"map_concern_eastasia_",modelname,".pdf"),width=6.5,height=6.5,eastasiaplot)
 
@@ -330,12 +309,8 @@ quartz(12,12)
 southasiaplot<-southasia%>%
   ggplot()+
   theme_bw()+
-  # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
   geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
-  # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
   scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
-  # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
   theme(axis.text=element_blank(),
@@ -347,7 +322,6 @@ southasiaplot<-southasia%>%
   annotation_north_arrow(height=unit(.5,"cm"),width=unit(.35,"cm"),
                          style=north_arrow_orienteering(text_size=4)) +  
   coord_sf(xlim = c(-2500000, 4000000), ylim = c(-0000000, 5000000))
-#  facet_wrap(~year)
 southasiaplot
 ggsave(file=paste0(figfolder,"map_concern_southasia_",modelname,".pdf"),width=6.5,height=6.5,southasiaplot)
 
@@ -368,14 +342,10 @@ quartz(12,12)
 africaplot<-africa%>%
   ggplot()+
   theme_bw()+
-  # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
   geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
-  # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
   scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
-  # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
-  geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+ ## this line is now creating lines across the map. why? 
+  geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+ 
   theme(axis.text=element_blank(),
         axis.title= element_blank(),
         axis.ticks = element_blank(),
@@ -385,7 +355,6 @@ africaplot<-africa%>%
   annotation_north_arrow(height=unit(.5,"cm"),width=unit(.35,"cm"),
                          style=north_arrow_orienteering(text_size=4)) + 
   coord_sf(xlim = c(-4500000, 3500000), ylim = c(-4000000, 4000000))
-#  facet_wrap(~year)
 africaplot
 ggsave(file=paste0(figfolder,"map_concern_africa_",modelname,".pdf"),width=6.5,height=6.5,africaplot)
 
@@ -399,12 +368,8 @@ quartz(12,12)
 southamericaplot<-southamerica%>%
   ggplot()+
   theme_bw()+
-  # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
   geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
-  # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
   scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
-  # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
   theme(axis.text=element_blank(),
@@ -416,7 +381,7 @@ southamericaplot<-southamerica%>%
   annotation_north_arrow(height=unit(.5,"cm"),width=unit(.35,"cm"),
                          style=north_arrow_orienteering(text_size=4)) + 
   coord_sf(xlim = c(-3000000, 3000000), ylim = c(-2500000, 5000000))
-#  facet_wrap(~year)
+
 southamericaplot
 ggsave(file=paste0(figfolder,"map_concern_southamerica_",modelname,".pdf"),width=6.5,height=6.5,southamericaplot)
 
@@ -430,12 +395,8 @@ quartz(12,12)
 northamericaplot<-northamerica%>%
   ggplot()+
   theme_bw()+
-  # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
   geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
-  # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
   scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
-  # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
   theme(axis.text=element_blank(),
@@ -447,7 +408,7 @@ northamericaplot<-northamerica%>%
   annotation_north_arrow(height=unit(.5,"cm"),width=unit(.35,"cm"),
                          style=north_arrow_orienteering(text_size=4)) + 
   coord_sf(xlim = c(-3500000, 3000000), ylim = c(-3500000, 3500000))
-#  facet_wrap(~year)
+
 northamericaplot
 ggsave(file=paste0(figfolder,"map_concern_northamerica_",modelname,".pdf"),width=6.5,height=6.5,northamericaplot)
 
@@ -461,12 +422,8 @@ quartz(12,12)
 oceaniaplot<-oceania%>%
   ggplot()+
   theme_bw()+
-  # geom_sf(data=countries_proj,aes(geometry=geom),fill="lightgray")+
   geom_sf(aes(geometry=geom,fill=mean.scl),lwd=.1,color="darkgray")+
-  # scale_fill_brewer(palette="PRGn",direction=1,drop=FALSE,guide=guide_legend(reverse=TRUE))+
-  # scale_fill_brewer(palette="RdBu",direction=-1,drop=FALSE,guide=guide_legend(reverse=TRUE),na.value="gray")+
   scale_fill_scico(palette = "roma", direction = -1,na.value="gray",limits=c(0,1),breaks=c(0,0.25,0.5,0.75,1))+
-  # labs(fill="Climate concern\n(st.dev from global mean)")+
   labs(fill="Climate\nconcern")+
   geom_sf(data=countries_proj,aes(geometry=geom),fill=NA,lwd=.2,color="darkgray")+
   theme(axis.text=element_blank(),
@@ -478,7 +435,7 @@ oceaniaplot<-oceania%>%
   annotation_north_arrow(height=unit(.5,"cm"),width=unit(.35,"cm"),
                          style=north_arrow_orienteering(text_size=4)) + 
   coord_sf(xlim = c(-2500000, 5000000), ylim = c(-5500000, 500000))
-#  facet_wrap(~year)
+
 oceaniaplot
 ggsave(file=paste0(figfolder,"map_concern_oceania_",modelname,".pdf"),width=4.5,height=6.5,oceaniaplot)
 
@@ -549,7 +506,6 @@ top.bottom5fig<-rbind(top5,bottom5)%>%
          fullname=fct_reorder(fullname,mean))%>%
   ggplot(aes(x=mean,y=fullname))+
   geom_pointrange(aes(y=fullname,xmin=q5,xmax=q95),size=.1)+
-  # geom_linerange(aes(y=fullname,xmin=q5,xmax=q95))+
   labs(y="Region",x="Climate concern",color="Continent")+
   theme_bw()+
   guides(color="none")+
@@ -599,7 +555,6 @@ quantile(discrimination2$mean)
 
 discplot<-ggplot(discrimination2,aes(x=mean,y=question2))+
   geom_bar(stat="identity",aes(fill=`Item category`))+
-  # geom_pointrange(aes(y=question2,x=mean,xmin=q5,xmax=q95,color=`Item category`))+
   labs(x="Discrimination parameter",y="Survey item")+
   theme_classic()+
   guides(fill=guide_legend(reverse=TRUE))+
@@ -616,11 +571,9 @@ dsum<-d%>%
   select(-c(regioncode_int,size,yes))%>%
   distinct()%>%
   group_by(year2,iso_3166,Continent_Name)%>%tally()
-# summarise(qs=count(question_int))
 head(dsum) 
 range(dsum$n)
 
-# quartz(18,18)
 
 questions.plot<-ggplot(dsum,aes(x=year2,y=iso_3166,alpha=n,color=Continent_Name))+
   geom_point()+
@@ -854,25 +807,13 @@ corrplot(cormat.yr,order="alphabet",
          tl.cex=.5,number.cex=0.5)
 dev.off()
 
-# ## calculate eigenvalues and scree plot for questions that we have full information for #### 
-## this doesn't tell us much because we have so much missingness
-# cormat.full<-cormat.df%>%filter_all(~!is.na(.))
-# cormat.full%<>%select(rownames(cormat.full)[-grep("aware",rownames(cormat.full))])
-# cormat.full<-cormat.full[-grep("aware",rownames(cormat.full)),]
-# 
-# ev.m<-eigen(cormat.full)
-# ap.m<-parallel(subject=nrow(cormat.full),var=ncol(cormat.full),rep=100,cent=0.05)
-# ns.m<-nScree(x=ev.m$values,ap=ap.m$eigen$qevpea)
-# plotnScree(ns.m,main="Scree plot for full dataset")
-
-
-# correlation matrix divided by global north vs. global south 
+# correlation divided by global north vs. global south 
 ## limit to questions with 30+ countries, merge in continent names so I can look at these correlations 
 ## by Global North vs. Global South (very roughly approximated by Europe + North America vs. rest of world)
-qlist<-filter(n.qns,ctry.n>=30)
+qlist<-filter(n.qns,ctry.n>=20)
 qlist<-unique(qlist$question)
 country.yr.means%<>%filter(question%in%qlist==TRUE)
-country.yr.means.wide%<>%select(-all_of(qlist))
+country.yr.means.wide<-pivot_wider(country.yr.means,id_cols=c(iso_3166),names_from="question",values_from="val")
 continents<-est.nat%>%select(iso_3166,Continent_Name)%>%distinct()
 country.yr.means%<>%left_join(continents)%>%
   mutate(europeus=ifelse(Continent_Name%in%c("Europe","North America")==TRUE,"yes","no"))
@@ -915,21 +856,11 @@ for(i in 1:length(c("yes","no"))){
   names(avgcorlist[[i]])[2]=paste0("cor=",c("yes","no")[i])
   }
 avgcor=full_join(avgcorlist[[1]],avgcorlist[[2]],by="var")
-## merge with average values and stdev from the two regions 
-# country.yr.means%<>%
-#   group_by(europeus,question)%>%
-#   summarise(mean = mean(val,na.rm=TRUE),
-#                stdev = sd(val,na.rm=TRUE))
-# country.yr.means%<>%
-#   pivot_wider(names_from=europeus,values_from=c(mean,stdev),names_sep=":")
-# avgcor%<>%left_join(country.yr.means,by=c("var"="question"))
-# avgcor%<>%mutate(across(where(is.numeric),~round(.x,2)))
 
 ## set limits 
 c(max(avgcor$`cor=yes`,na.rm=TRUE),max(avgcor$`cor=no`,na.rm=TRUE),min(avgcor$`cor=yes`,na.rm=TRUE),min(avgcor$`cor=no`,na.rm=TRUE))
 corplot_northsouth<-ggplot(avgcor,aes(x=`cor=yes`,y=`cor=no`,label=var))+
   geom_text(size=2.5)+
-  # geom_point()+
   scale_x_continuous(limits=c(-0.5,1))+ ## ensure that these limits include maxes and mins above
   scale_y_continuous(limits=c(-0.5,1))+
   geom_abline(slope=1,intercept=0,lty="dashed")+
@@ -938,20 +869,7 @@ corplot_northsouth<-ggplot(avgcor,aes(x=`cor=yes`,y=`cor=no`,label=var))+
   theme_bw()
 corplot_northsouth
 ggsave(filename=paste0(figfolder,"pairwisecorrelations_scatter.pdf"),width=6.5,height=3.5,corplot_northsouth)
-# ## merge in discrimination parameters to see if tight correlations here are correlated with strong discrimination parameters
-# avgcor%<>%left_join(discrimination2%>%select(question2,mean)%>%distinct(),by=c("var"="question2"))
-# avgcor%<>%rename(discrimination=mean)
-# ggplot(avgcor,aes(x=`cor=yes`,y=`cor=no`,label=var,color=discrimination))+
-#   geom_point()+
-#   scale_color_scico(palette="roma")+
-#   scale_x_continuous(limits=c(-.5,1))+
-#   scale_y_continuous(limits=c(-.5,1))+
-#   geom_abline(slope=1,intercept=0)
-# 
-# ggplot(avgcor,aes(x=`stdev:yes`,y=`stdev:no`,label=var))+
-#   geom_text(size=2)+
-#   scale_x_continuous(limits=c(0,1.5))+
-#   scale_y_continuous(limits=c(0,1.5))
+
 
 # dimensionality for surveys for which we have multiple questions ####
 sources<-c("worldbank_2010","mildenbergerdynata_2021")
